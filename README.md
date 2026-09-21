@@ -39,11 +39,12 @@ Use `-T n_instances=N` for many fresh instances with standard errors, and `-T re
 | Task | Type | Challenge |
 | --- | --- | --- |
 | [CCAR stress loss](docs/tasks/ccar.md) | realistic domain | feature selection under collinearity, transform discovery, bounded functional form, stress extrapolation |
+| [CECL lifetime losses](docs/tasks/cecl.md) | synthetic credit portfolio | lifetime allowance, amortization, defaults and prepayments, recoveries, forecast reversion |
 | [Macro tail quantiles](docs/tasks/quantile.md) | realistic domain | population vs sample quantile, tail extrapolation from 10 observations |
 | [Ballistic extrapolation](docs/tasks/ballistic.md) | controlled mechanism | out-of-range extrapolation against velocity-dependent drag |
 | [Orbital: two-body, three-body, hyperbolic flyby](docs/tasks/orbital.md) | controlled mechanism | periodic signal recovery, coupled retrograde geometry, angles-only orbit determination |
 
-The two domain tasks are the realistic ones. The mechanism tasks calibrate the harness across a difficulty gradient with exactly known ground truth.
+CCAR and quantile are the original realistic domain tasks. CECL adds a synthetic lifetime-credit-loss task; it has no measured agent results yet and is not included in the score table below. The mechanism tasks calibrate the harness across a difficulty gradient with exactly known ground truth.
 
 ## Summary Scores
 
@@ -91,6 +92,7 @@ CCAR's response law is now drawn per instance rather than fixed and published. T
 ```
 pereval/            Python package: Inspect tasks and scorers
   tasks/ccar/       FRED-calibrated macro + Vasicek generator, task, OLS + Vasicek baselines
+  tasks/cecl/       synthetic lifetime loss generator, task, cohort + naive baselines
   tasks/quantile/   screened FRED YoY snapshot, generator, task, six reference estimators
   tasks/ballistic/  generator, Inspect task, Docker sandbox, quadratic baseline
   tasks/orbit/      two-body, three-body, and hyperbolic-flyby generators, tasks, baselines
