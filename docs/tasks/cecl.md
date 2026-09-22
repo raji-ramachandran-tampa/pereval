@@ -7,6 +7,13 @@ over each pool's remaining contractual life. It is a modelling benchmark, not
 a complete accounting compliance assessment. No agent results have been measured
 for this task yet; it is not part of the README's existing ranking.
 
+A separate [CECL Gemini Pilot — September 2026](../../runs/cecl-gemini3-hosted-20260922/REPORT.md)
+was attempted on 2026-09-22. Five Flash-Lite responses were scoreable; provider
+failures prevented the intended two-model comparison. That pilot uses inline
+inputs and Google's Python tool, not the Inspect/Docker task, and is excluded
+from the existing rankings. Its report includes matched reference comparisons,
+raw responses, repeatability observations and the execution limitations.
+
 ## Run
 
 ```bash

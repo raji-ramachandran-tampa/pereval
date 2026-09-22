@@ -1,0 +1,51 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "scenario": "baseline",
+  "repeat": 2,
+  "instance_seed": 693650678,
+  "input_sha256": "b8ad479a1cc76a49e96721f8aefcf7594ceba9073ec7301fcecd1b31e7a02682",
+  "finish_reason": "FinishReason.STOP",
+  "code_executions": 1,
+  "successful_code_executions": 1,
+  "usage": {
+    "cache_tokens_details": [
+      {
+        "modality": "TEXT",
+        "token_count": 34301
+      }
+    ],
+    "cached_content_token_count": 34301,
+    "candidates_token_count": 20572,
+    "prompt_token_count": 22993,
+    "prompt_tokens_details": [
+      {
+        "modality": "TEXT",
+        "token_count": 22993
+      }
+    ],
+    "thoughts_token_count": 3580,
+    "tool_use_prompt_token_count": 43162,
+    "tool_use_prompt_tokens_details": [
+      {
+        "modality": "TEXT",
+        "token_count": 43162
+      }
+    ],
+    "total_token_count": 90307
+  },
+  "estimated_cost_usd": 0.04197625,
+  "scores": {
+    "ecl_regret": 0.00017187074201831262,
+    "zero_regret": 0.006066642454136036,
+    "loss_rate_mae_bps": 109.51525770184881,
+    "completion": 1.0,
+    "runs": 1.0,
+    "regret_worst": 0.00017187074201831262,
+    "regret_spread": 0.0,
+    "portfolio_bias": -912096.3234108174,
+    "portfolio_ecl": 4977660.183346802,
+    "true_portfolio_ecl": 5889756.50675762
+  },
+  "status": "measured",
+  "seconds": 65.82799999999952
+}
