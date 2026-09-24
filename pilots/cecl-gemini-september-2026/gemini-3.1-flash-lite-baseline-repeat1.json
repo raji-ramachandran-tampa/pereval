@@ -1,0 +1,25 @@
+{
+  "model": "gemini-3.1-flash-lite",
+  "scenario": "baseline",
+  "repeat": 1,
+  "instance_seed": 693650678,
+  "input_sha256": "b8ad479a1cc76a49e96721f8aefcf7594ceba9073ec7301fcecd1b31e7a02682",
+  "finish_reason": "FinishReason.STOP",
+  "code_executions": 0,
+  "successful_code_executions": 0,
+  "usage": {
+    "candidates_token_count": 2482,
+    "prompt_token_count": 19861,
+    "prompt_tokens_details": [
+      {
+        "modality": "TEXT",
+        "token_count": 19861
+      }
+    ],
+    "thoughts_token_count": 103,
+    "total_token_count": 22446
+  },
+  "estimated_cost_usd": 0.00884275,
+  "status": "unmeasured_no_successful_execution",
+  "seconds": 10.969000000000051
+}

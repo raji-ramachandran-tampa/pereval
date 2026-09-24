@@ -1,0 +1,86 @@
+[
+  {
+    "pool_id": "A1",
+    "segment": "A",
+    "balance": 6258655.0,
+    "remaining_quarters": 4,
+    "ecl": 160956.51346070485
+  },
+  {
+    "pool_id": "A2",
+    "segment": "A",
+    "balance": 1394387.0,
+    "remaining_quarters": 12,
+    "ecl": 174682.75713097074
+  },
+  {
+    "pool_id": "A3",
+    "segment": "A",
+    "balance": 6723346.0,
+    "remaining_quarters": 24,
+    "ecl": 1294067.5232852856
+  },
+  {
+    "pool_id": "A4",
+    "segment": "A",
+    "balance": 7357897.0,
+    "remaining_quarters": 40,
+    "ecl": 1686395.3908826762
+  },
+  {
+    "pool_id": "B1",
+    "segment": "B",
+    "balance": 1813983.0,
+    "remaining_quarters": 4,
+    "ecl": 57163.852353427246
+  },
+  {
+    "pool_id": "B2",
+    "segment": "B",
+    "balance": 1906042.0,
+    "remaining_quarters": 12,
+    "ecl": 370167.2363839782
+  },
+  {
+    "pool_id": "B3",
+    "segment": "B",
+    "balance": 6254335.0,
+    "remaining_quarters": 24,
+    "ecl": 1810458.2979793204
+  },
+  {
+    "pool_id": "B4",
+    "segment": "B",
+    "balance": 8279649.0,
+    "remaining_quarters": 40,
+    "ecl": 2754740.2643532064
+  },
+  {
+    "pool_id": "C1",
+    "segment": "C",
+    "balance": 5302133.0,
+    "remaining_quarters": 4,
+    "ecl": 39491.015381975965
+  },
+  {
+    "pool_id": "C2",
+    "segment": "C",
+    "balance": 5931693.0,
+    "remaining_quarters": 12,
+    "ecl": 326499.6904633635
+  },
+  {
+    "pool_id": "C3",
+    "segment": "C",
+    "balance": 5650400.0,
+    "remaining_quarters": 24,
+    "ecl": 495309.2769946973
+  },
+  {
+    "pool_id": "C4",
+    "segment": "C",
+    "balance": 1829401.0,
+    "remaining_quarters": 40,
+    "ecl": 190507.94032218194
+  }
+]
