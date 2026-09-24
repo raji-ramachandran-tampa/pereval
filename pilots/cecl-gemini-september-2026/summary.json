@@ -1,0 +1,261 @@
+{
+  "models": [
+    {
+      "model": "gemini-3.1-flash-lite",
+      "measured": 5,
+      "planned": 6,
+      "rankable": false,
+      "worse_than_zero_runs": 2,
+      "repeat_comparisons": [
+        {
+          "scenario": "baseline",
+          "mae_ratio": 27.599738208787993,
+          "regret_ratio": 959.4069439415794
+        },
+        {
+          "scenario": "adverse",
+          "mae_ratio": 1.1866465602641805,
+          "regret_ratio": 1.2356733095583334
+        }
+      ],
+      "mean_mae_bps": 847.142751283609,
+      "worst_regret": null,
+      "max_repeat_spread": 0.16472211261074257,
+      "completion": 1.0,
+      "runs_using_code": 2,
+      "estimated_cost_usd": 0.10536090000000001
+    },
+    {
+      "model": "gemini-3.8-flash",
+      "measured": 0,
+      "planned": 6,
+      "rankable": false,
+      "worse_than_zero_runs": 0,
+      "repeat_comparisons": [],
+      "mean_mae_bps": null,
+      "worst_regret": null,
+      "max_repeat_spread": null,
+      "completion": 0,
+      "runs_using_code": 0,
+      "estimated_cost_usd": 0.0
+    }
+  ],
+  "runs": [
+    {
+      "model": "gemini-3.1-flash-lite",
+      "scenario": "baseline",
+      "repeat": 1,
+      "seconds": 10.969000000000051,
+      "status": "measured",
+      "executions": 0,
+      "cost": 0.00884275,
+      "ecl_regret": 0.1648939833527609,
+      "zero_regret": 0.006066642454136036,
+      "loss_rate_mae_bps": 3022.59244243898,
+      "completion": 1.0,
+      "runs": 1.0,
+      "regret_worst": 0.1648939833527609,
+      "regret_spread": 0.0,
+      "portfolio_bias": 25173619.747336585,
+      "portfolio_ecl": 31063376.254094206,
+      "true_portfolio_ecl": 5889756.50675762,
+      "worse_than_zero": true,
+      "regret_to_zero_ratio": 27.180435405475666
+    },
+    {
+      "model": "gemini-3.1-flash-lite",
+      "scenario": "baseline",
+      "repeat": 2,
+      "seconds": 65.82799999999952,
+      "status": "measured",
+      "executions": 1,
+      "cost": 0.045049025,
+      "ecl_regret": 0.00017187074201831262,
+      "zero_regret": 0.006066642454136036,
+      "loss_rate_mae_bps": 109.51525770184881,
+      "completion": 1.0,
+      "runs": 1.0,
+      "regret_worst": 0.00017187074201831262,
+      "regret_spread": 0.0,
+      "portfolio_bias": -912096.3234108174,
+      "portfolio_ecl": 4977660.183346802,
+      "true_portfolio_ecl": 5889756.50675762,
+      "worse_than_zero": false,
+      "regret_to_zero_ratio": 0.02833045515994384
+    },
+    {
+      "model": "gemini-3.1-flash-lite",
+      "scenario": "adverse",
+      "repeat": 1,
+      "seconds": 5.54700000000048,
+      "status": "measured",
+      "executions": 0,
+      "cost": 0.00721575,
+      "ecl_regret": 0.003712154221789743,
+      "zero_regret": 0.038455948671220166,
+      "loss_rate_mae_bps": 505.6405853601113,
+      "completion": 1.0,
+      "runs": 1.0,
+      "regret_worst": 0.003712154221789743,
+      "regret_spread": 0.0,
+      "portfolio_bias": 2356881.6710082144,
+      "portfolio_ecl": 11717321.430000002,
+      "true_portfolio_ecl": 9360439.758991787,
+      "worse_than_zero": false,
+      "regret_to_zero_ratio": 0.09653003891613422
+    },
+    {
+      "model": "gemini-3.1-flash-lite",
+      "scenario": "adverse",
+      "repeat": 2,
+      "seconds": 6.983999999999469,
+      "status": "measured",
+      "executions": 0,
+      "cost": 0.0038385,
+      "ecl_regret": 0.003004155057064863,
+      "zero_regret": 0.038455948671220166,
+      "loss_rate_mae_bps": 426.1088366931613,
+      "completion": 1.0,
+      "runs": 1.0,
+      "regret_worst": 0.003004155057064863,
+      "regret_spread": 0.0,
+      "portfolio_bias": -55995.42374634743,
+      "portfolio_ecl": 9304444.33524544,
+      "true_portfolio_ecl": 9360439.758991787,
+      "worse_than_zero": false,
+      "regret_to_zero_ratio": 0.0781193849292067
+    },
+    {
+      "model": "gemini-3.1-flash-lite",
+      "scenario": "benign",
+      "repeat": 1,
+      "seconds": 60.59400000000005,
+      "status": "unmeasured",
+      "executions": 0,
+      "cost": 0.0
+    },
+    {
+      "model": "gemini-3.1-flash-lite",
+      "scenario": "benign",
+      "repeat": 2,
+      "seconds": 56.65700000000015,
+      "status": "measured",
+      "executions": 1,
+      "cost": 0.040414875,
+      "ecl_regret": 0.0007290340416308399,
+      "zero_regret": 0.0005377415502179324,
+      "loss_rate_mae_bps": 171.85663422394356,
+      "completion": 1.0,
+      "runs": 1.0,
+      "regret_worst": 0.0007290340416308399,
+      "regret_spread": 0.0,
+      "portfolio_bias": 1585758.4053169638,
+      "portfolio_ecl": 3326068.3902007765,
+      "true_portfolio_ecl": 1740309.9848838127,
+      "worse_than_zero": true,
+      "regret_to_zero_ratio": 1.3557331423160097
+    },
+    {
+      "model": "gemini-3.8-flash",
+      "scenario": "baseline",
+      "repeat": 1,
+      "seconds": 9.20300000000043,
+      "status": "unmeasured",
+      "executions": 0,
+      "cost": 0.0
+    },
+    {
+      "model": "gemini-3.8-flash",
+      "scenario": "baseline",
+      "repeat": 2,
+      "seconds": 1.405999999999949,
+      "status": "unmeasured",
+      "executions": 0,
+      "cost": 0.0
+    }
+  ],
+  "references": {
+    "cohort": [
+      {
+        "ecl_regret": 9.983654546139499e-06,
+        "zero_regret": 0.006066642454136036,
+        "loss_rate_mae_bps": 24.56829944415161,
+        "completion": 1.0,
+        "runs": 1.0,
+        "regret_worst": 9.983654546139499e-06,
+        "regret_spread": 0.0,
+        "portfolio_bias": -190025.03603548557,
+        "portfolio_ecl": 5699731.470722134,
+        "true_portfolio_ecl": 5889756.50675762
+      },
+      {
+        "ecl_regret": 4.343983666892126e-06,
+        "zero_regret": 0.038455948671220166,
+        "loss_rate_mae_bps": 15.980912411077568,
+        "completion": 1.0,
+        "runs": 1.0,
+        "regret_worst": 4.343983666892126e-06,
+        "regret_spread": 0.0,
+        "portfolio_bias": 93174.78510421142,
+        "portfolio_ecl": 9453614.544095999,
+        "true_portfolio_ecl": 9360439.758991787
+      },
+      {
+        "ecl_regret": 8.647790342529416e-08,
+        "zero_regret": 0.0005377415502179324,
+        "loss_rate_mae_bps": 2.6262817541088763,
+        "completion": 1.0,
+        "runs": 1.0,
+        "regret_worst": 8.647790342529416e-08,
+        "regret_spread": 0.0,
+        "portfolio_bias": 3306.208607849898,
+        "portfolio_ecl": 1743616.1934916626,
+        "true_portfolio_ecl": 1740309.9848838127
+      }
+    ],
+    "naive": [
+      {
+        "ecl_regret": 0.0037964799685658306,
+        "zero_regret": 0.006066642454136036,
+        "loss_rate_mae_bps": 463.6496687487885,
+        "completion": 1.0,
+        "runs": 1.0,
+        "regret_worst": 0.0037964799685658306,
+        "regret_spread": 0.0,
+        "portfolio_bias": 2769310.009456125,
+        "portfolio_ecl": 8659066.516213745,
+        "true_portfolio_ecl": 5889756.50675762
+      },
+      {
+        "ecl_regret": 0.006659684723356117,
+        "zero_regret": 0.038455948671220166,
+        "loss_rate_mae_bps": 547.9077651316272,
+        "completion": 1.0,
+        "runs": 1.0,
+        "regret_worst": 0.006659684723356117,
+        "regret_spread": 0.0,
+        "portfolio_bias": 2405389.2556628194,
+        "portfolio_ecl": 11765829.014654607,
+        "true_portfolio_ecl": 9360439.758991787
+      },
+      {
+        "ecl_regret": 0.015847736330532852,
+        "zero_regret": 0.0005377415502179324,
+        "loss_rate_mae_bps": 1002.5939073383464,
+        "completion": 1.0,
+        "runs": 1.0,
+        "regret_worst": 0.015847736330532852,
+        "regret_spread": 0.0,
+        "portfolio_bias": 9251151.245110642,
+        "portfolio_ecl": 10991461.229994455,
+        "true_portfolio_ecl": 1740309.9848838127
+      }
+    ]
+  },
+  "matched_reference_mae_bps": {
+    "gemini-3.1-flash-lite": {
+      "cohort": 16.744941092913447,
+      "naive": 605.1417550198356
+    }
+  }
+}
