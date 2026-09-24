@@ -36,11 +36,12 @@ def score_predictions(truth: list[dict], text: str | None) -> dict[str, float]:
             mae += weight * abs(error)
             predicted_total += value
         else:
-            # Maximum possible error on the allowed [0,1] rate range: abstention
-            # cannot beat a valid answer, including the zero-allowance anchor.
+            # Suite convention: max(degenerate score, 5 * oracle score).
+            # The exact mean oracle has zero squared error, leaving the
+            # zero-allowance anchor for this pool. Completion remains separate.
             missing += 1
-            regret += weight
-            mae += weight
+            regret += weight * true_rate**2
+            mae += weight * true_rate
         zero_regret += weight * true_rate**2
         true_total += expected
     result = {

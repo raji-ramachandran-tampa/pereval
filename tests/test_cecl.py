@@ -79,10 +79,14 @@ def test_exact_oracle_and_missing_penalty():
     assert perfect["ecl_regret"] == 0
     assert perfect["portfolio_bias"] == 0
     missing = score_predictions(truth, None)
-    assert missing["ecl_regret"] == pytest.approx(1)
+    assert missing["ecl_regret"] == pytest.approx(perfect["zero_regret"])
     assert missing["completion"] == 0
     assert "portfolio_ecl" not in missing
-    assert missing["ecl_regret"] > perfect["zero_regret"]
+    zero = csv_text([{"pool_id": p["pool_id"], "ecl": 0} for p in truth])
+    assert missing["loss_rate_mae_bps"] == pytest.approx(
+        score_predictions(truth, zero)["loss_rate_mae_bps"]
+    )
+    assert score_predictions(truth, zero)["completion"] == 1
 
 
 @pytest.mark.parametrize(
@@ -97,12 +101,9 @@ def test_exact_oracle_and_missing_penalty():
     ],
 )
 def test_invalid_output_cannot_gain_credit(text):
-    assert (
-        score_predictions([{"pool_id": "A", "balance": 100, "ecl": 10}], text)[
-            "ecl_regret"
-        ]
-        == 1
-    )
+    assert score_predictions([{"pool_id": "A", "balance": 100, "ecl": 10}], text)[
+        "ecl_regret"
+    ] == pytest.approx(0.01)
 
 
 def test_offsetting_pool_errors_do_not_cancel():
@@ -110,6 +111,24 @@ def test_offsetting_pool_errors_do_not_cancel():
     score = score_predictions(truth, "pool_id,ecl\nA,0\nB,20\n")
     assert score["portfolio_bias"] == 0
     assert score["ecl_regret"] == pytest.approx(0.01)
+
+
+def test_partial_missing_uses_pool_weighted_zero_anchor():
+    truth = [
+        {"pool_id": "A", "balance": 100, "ecl": 10},
+        {"pool_id": "B", "balance": 300, "ecl": 60},
+    ]
+    result = score_predictions(truth, "pool_id,ecl\nA,10\n")
+    assert result["ecl_regret"] == pytest.approx(0.75 * 0.2**2)
+    assert result["loss_rate_mae_bps"] == pytest.approx(0.75 * 0.2 * 10000)
+    assert result["completion"] == 0.5
+    assert "portfolio_ecl" not in result
+
+
+def test_zero_loss_missing_still_reports_incompletion():
+    result = score_predictions([{"pool_id": "A", "balance": 100, "ecl": 0}], None)
+    assert result["ecl_regret"] == result["zero_regret"] == 0
+    assert result["completion"] == 0
 
 
 @pytest.mark.parametrize("scenario", ["baseline", "adverse", "benign"])
