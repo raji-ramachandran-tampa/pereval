@@ -1,4 +1,4 @@
-"""Synthetic closed-end loan pools with an exact conditional-mean loss oracle.
+"""Synthetic loan pools with analytical or simulated lifetime loss oracles.
 
 Only public_files() enters the agent sandbox. Coefficients and future expected
 losses remain host-side. Rates are quarterly; prepayment is conditional on no
@@ -12,7 +12,7 @@ import io
 import json
 
 import numpy as np
-from scipy.special import expit
+from scipy.special import expit, ndtr, ndtri
 
 
 def csv_text(rows: list[dict]) -> str:
@@ -78,12 +78,63 @@ def _rates(x: np.ndarray, coefficients: np.ndarray) -> np.ndarray:
     return expit(np.column_stack([np.ones(len(x)), x]) @ coefficients.T)
 
 
+def default_paths(means, n_paths, rng, rho=0.02, persistence=0.6):
+    """Stationary Gaussian AR(1) shocks with E[PD_q] = means[q].
+
+    Shocks start independently of the historical mean-rate measurement noise.
+    Rates are aggregate large-pool fractions, not finite-loan default counts.
+    """
+    means = np.asarray(means, dtype=float)
+    if (
+        means.ndim != 1
+        or not len(means)
+        or not np.isfinite(means).all()
+        or np.any((means < 0) | (means > 1))
+        or n_paths < 1
+        or not 0 <= rho < 1
+        or not -1 < persistence < 1
+    ):
+        raise ValueError("Invalid means, path count, dispersion or persistence")
+    z = rng.standard_normal(n_paths)
+    paths = np.empty((n_paths, len(means)))
+    for q, mean in enumerate(means):
+        if q:
+            z = persistence * z + np.sqrt(1 - persistence**2) * rng.standard_normal(
+                n_paths
+            )
+        paths[:, q] = ndtr((ndtri(mean) + np.sqrt(rho) * z) / np.sqrt(1 - rho))
+    return paths
+
+
+def path_losses(balance, rates, pds):
+    """Apply competing exits and amortization separately on each full path."""
+    rates, pds = np.asarray(rates, dtype=float), np.asarray(pds, dtype=float)
+    # Reuse accounting validation, including rates and balance boundaries.
+    lifetime_loss(balance, len(rates), rates)
+    if (
+        pds.ndim != 2
+        or pds.shape[1] != len(rates)
+        or not len(pds)
+        or not np.isfinite(pds).all()
+        or np.any((pds < 0) | (pds > 1))
+    ):
+        raise ValueError("Invalid default paths")
+    survival = np.ones(len(pds))
+    losses = np.zeros(len(pds))
+    for q, (_, lgd, prepay) in enumerate(rates):
+        losses += balance * (1 - q / len(rates)) * survival * pds[:, q] * lgd
+        survival *= (1 - pds[:, q]) * (1 - prepay)
+    return losses
+
+
 def generate(
     seed: int = 1,
     n_history: int = 80,
     forecast_quarters: int = 8,
     reversion_quarters: int = 4,
     scenario: str = "baseline",
+    simulation: bool = False,
+    oracle_n: int = 10000,
 ) -> dict:
     if n_history < 20 or forecast_quarters < 1 or reversion_quarters < 0:
         raise ValueError(
@@ -91,7 +142,10 @@ def generate(
         )
     if scenario not in ("baseline", "adverse", "benign"):
         raise ValueError("scenario must be baseline, adverse or benign")
+    if oracle_n < 100:
+        raise ValueError("oracle_n must be >= 100")
     rng = np.random.default_rng(seed)
+    oracle_streams = np.random.SeedSequence([seed, 9341]).spawn(6)
     x = np.zeros((n_history, 2))
     for t in range(1, n_history):
         shock = rng.multivariate_normal([0, 0], [[1, -0.5], [-0.5, 1]])
@@ -110,7 +164,7 @@ def generate(
     ]
     history, pools, truth = [], [], []
     parameters = {}
-    for segment in ("A", "B", "C"):
+    for segment_index, segment in enumerate(("A", "B", "C")):
         coefficients = np.array(
             [
                 [
@@ -136,6 +190,18 @@ def generate(
                     "prepay": float(rng.binomial(10000, prepay) / 10000),
                 }
             )
+        if simulation:
+            full_rates = extend_rates(
+                _rates(future, coefficients),
+                expected.mean(axis=0),
+                40,
+                reversion_quarters,
+            )
+            # Same-segment pools share shocks; independent streams across segments.
+            draws = [
+                default_paths(full_rates[:, 0], oracle_n, np.random.default_rng(stream))
+                for stream in oracle_streams[2 * segment_index : 2 * segment_index + 2]
+            ]
         for j, term in enumerate((4, 12, 24, 40)):
             balance = float(rng.integers(1_000_000, 10_000_001))
             pool = {
@@ -151,7 +217,19 @@ def generate(
                 term,
                 reversion_quarters,
             )
-            truth.append(dict(**pool, ecl=lifetime_loss(balance, term, rates)))
+            record = dict(**pool, ecl=lifetime_loss(balance, term, rates))
+            if simulation:
+                calibration, evaluation = [
+                    path_losses(balance, rates, d[:, :term]) for d in draws
+                ]
+                record.update(
+                    ecl=float(calibration.mean()),
+                    ecl_mc_se=float(calibration.std(ddof=1) / np.sqrt(oracle_n)),
+                    lower=float(np.quantile(calibration, 0.025)),
+                    upper=float(np.quantile(calibration, 0.975)),
+                    loss_samples=evaluation.tolist(),
+                )
+            truth.append(record)
     return {
         "history": history,
         "forecast": forecast,
@@ -159,6 +237,16 @@ def generate(
         "policy": {
             "forecast_quarters": forecast_quarters,
             "reversion_quarters": reversion_quarters,
+            **(
+                {
+                    "simulation": "aggregate_probit_ar1_v1",
+                    "rho": 0.02,
+                    "persistence": 0.6,
+                    "interval_level": 0.95,
+                }
+                if simulation
+                else {}
+            ),
         },
         "truth": truth,
         "parameters": parameters,

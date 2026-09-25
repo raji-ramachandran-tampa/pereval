@@ -9,7 +9,13 @@ import json
 import numpy as np
 from scipy.special import expit, logit
 
-from pereval.tasks.cecl.generator import csv_text, extend_rates, lifetime_loss
+from pereval.tasks.cecl.generator import (
+    csv_text,
+    default_paths,
+    extend_rates,
+    lifetime_loss,
+    path_losses,
+)
 
 
 def predict(files: dict[str, str], method: str = "cohort") -> str:
@@ -45,7 +51,25 @@ def predict(files: dict[str, str], method: str = "cohort") -> str:
                 forecast_rates, historical, term, policy["reversion_quarters"]
             )
             ecl = lifetime_loss(balance, term, path)
-        predictions.append({"pool_id": pool["pool_id"], "ecl": ecl})
+        row = {"pool_id": pool["pool_id"], "ecl": ecl}
+        if policy.get("simulation"):
+            if method == "naive":
+                row.update(ecl_lower=ecl, ecl_upper=ecl)
+            else:
+                draws = default_paths(
+                    path[:, 0],
+                    20000,
+                    np.random.default_rng(1729),
+                    policy["rho"],
+                    policy["persistence"],
+                )
+                losses = path_losses(balance, path, draws)
+                row.update(
+                    ecl=float(losses.mean()),
+                    ecl_lower=float(np.quantile(losses, 0.025)),
+                    ecl_upper=float(np.quantile(losses, 0.975)),
+                )
+        predictions.append(row)
     return csv_text(predictions)
 
 

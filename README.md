@@ -39,7 +39,7 @@ Use `-T n_instances=N` for many fresh instances with standard errors, and `-T re
 | Task | Type | Challenge |
 | --- | --- | --- |
 | [CCAR stress loss](docs/tasks/ccar.md) | realistic domain | feature selection under collinearity, transform discovery, bounded functional form, stress extrapolation |
-| [CECL lifetime losses](docs/tasks/cecl.md) | synthetic credit portfolio | lifetime allowance, amortization, defaults and prepayments, recoveries, forecast reversion |
+| [CECL lifetime losses](docs/tasks/cecl.md) | synthetic credit portfolio | lifetime allowance, amortization, defaults and prepayments, recoveries, forecast reversion; optional simulated loss intervals |
 | [Macro tail quantiles](docs/tasks/quantile.md) | realistic domain | population vs sample quantile, tail extrapolation from 10 observations |
 | [Ballistic extrapolation](docs/tasks/ballistic.md) | controlled mechanism | out-of-range extrapolation against velocity-dependent drag |
 | [Orbital: two-body, three-body, hyperbolic flyby](docs/tasks/orbital.md) | controlled mechanism | periodic signal recovery, coupled retrograde geometry, angles-only orbit determination |

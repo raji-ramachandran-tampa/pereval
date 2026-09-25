@@ -55,6 +55,31 @@ Write a complete predictions.csv early and refine it before finishing.
 """
 
 
+SIMULATION_INSTRUCTIONS = (
+    INSTRUCTIONS.replace(
+        "exactly pool_id,ecl,", "exactly pool_id,ecl,ecl_lower,ecl_upper,"
+    )
+    + """
+Simulation mode: also predict a central 95% interval for aggregate lifetime loss
+in dollars (ecl_lower, ecl_upper). Require 0 <= lower <= upper <= balance.
+This is a large homogeneous pool model: no finite-loan sampling noise.
+History measures conditional mean rates with observation noise, not the future
+systemic shocks. Fit those means as above. For each future quarter with mean PD m,
+realized aggregate PD = Phi((Phi_inverse(m)+sqrt(rho)*z)/sqrt(1-rho)).
+Phi is the standard normal CDF. z starts N(0,1), independent of history;
+z_next = persistence*z + sqrt(1-persistence^2)*epsilon, epsilon iid N(0,1).
+Use rho and persistence from policy.json. This construction preserves marginal
+mean PD. Apply reversion to mean rates BEFORE drawing shocks, through maturity.
+LGD and prepay remain deterministic conditional rates. Pools in a segment share
+shocks; segments are independent. Apply the balance recursion on each full path,
+then average lifetime losses for ecl; do not recurse on average PDs instead.
+The interval describes future loss variability, not confidence in the mean.
+Intervals receive balance-weighted Winkler regret, coverage and width diagnostics
+separately from expected-loss error. The mean oracle is a Monte Carlo estimate.
+"""
+)
+
+
 @task
 def cecl(
     n_instances: int = 3,
@@ -64,6 +89,8 @@ def cecl(
     reversion_quarters: int = 4,
     scenario: str = "rotate",
     baseline: str = "",
+    simulation: bool = False,
+    oracle_n: int = 10000,
     repeats: int = 1,
     message_limit: int = 500,
 ) -> Task:
@@ -81,7 +108,13 @@ def cecl(
             else scenario
         )
         bundle = generate(
-            int(child), n_history, forecast_quarters, reversion_quarters, selected
+            int(child),
+            n_history,
+            forecast_quarters,
+            reversion_quarters,
+            selected,
+            simulation=simulation,
+            oracle_n=oracle_n,
         )
         samples.append(
             Sample(
@@ -95,7 +128,9 @@ def cecl(
         reference_solver(baseline)
         if baseline
         else basic_agent(
-            init=system_message(INSTRUCTIONS),
+            init=system_message(
+                SIMULATION_INSTRUCTIONS if simulation else INSTRUCTIONS
+            ),
             tools=[bash(timeout=240), python(timeout=240)],
             message_limit=message_limit,
         )

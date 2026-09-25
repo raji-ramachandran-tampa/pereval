@@ -176,7 +176,8 @@ def test_task_wiring_and_stability():
     assert reduced.value["regret_spread"] == pytest.approx(0.03)
 
 
-def test_reference_solver_to_scorer_round_trip(monkeypatch):
+@pytest.mark.parametrize("simulation", [False, True])
+def test_reference_solver_to_scorer_round_trip(monkeypatch, simulation):
     """Exercise Inspect callables with a file sandbox double; no Docker required."""
     import asyncio
     from types import SimpleNamespace
@@ -186,7 +187,7 @@ def test_reference_solver_to_scorer_round_trip(monkeypatch):
     from pereval.scorers.cecl import cecl_scorer
     from pereval.tasks.cecl.baselines import reference_solver
 
-    bundle = generate(seed=9)
+    bundle = generate(seed=9, simulation=simulation)
     files = public_files(bundle)
 
     class FileSandbox:
@@ -206,6 +207,9 @@ def test_reference_solver_to_scorer_round_trip(monkeypatch):
         score = await cecl_scorer()(state, None)
         assert score.value["completion"] == 1
         assert score.value["ecl_regret"] < score.value["zero_regret"]
+        if simulation:
+            assert score.value["winkler_regret"] < score.value["degenerate_regret"]
+            assert 0 < score.value["coverage"] <= 1
         del files["predictions.csv"]
         missing = await cecl_scorer()(state, None)
         assert missing.value["completion"] == 0
