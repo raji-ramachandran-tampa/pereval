@@ -42,25 +42,45 @@ Each rate has its own coefficients. For PD, the unemployment coefficient is posi
 
 The benchmark prescribes a linear transition of PD, LGD and prepayment from the last forecast quarter to segment historical mean rates. The first subsequent quarter has historical weight `1/R`, reaching full reversion in quarter `R`. `R=0` means immediate reversion. After that the historical rates remain fixed. The oracle's historical target is the mean of the latent conditional rates over the supplied history; the agent estimates it from noisy observations. This policy is part of the exercise, not a claim that CECL mandates this particular method.
 
-For a pool with initial balance $B$, remaining term $T$, and quarter $q=1,\ldots,T$, beginning exposure is:
+The calculation follows the familiar expected-loss relationship for each quarter:
 
 ```math
-E_q = B\left(1-\frac{q-1}{T}\right)S_{q-1}.
+\mathrm{EL}_q=\mathrm{PD}_q\times\mathrm{EAD}_q\times\mathrm{LGD}_q.
 ```
 
-Survival starts at one and accounts for default followed by conditional prepayment $p_q$:
+**PD** is the quarterly default probability conditional on surviving to that quarter. **EAD (exposure at default)** is the aggregate beginning-of-quarter principal still exposed to default, before applying that quarter's PD. **LGD** is the fraction of defaulted principal lost after recoveries. EAD is not already-defaulted principal; multiplying it by PD gives the principal expected to default in that quarter.
+
+For a pool with initial balance $B$, remaining term $T$, and quarter $q=1,\ldots,T$, EAD is calculated from amortization and survival:
+
+```math
+\mathrm{EAD}_q=B\left(1-\frac{q-1}{T}\right)S_{q-1}.
+```
+
+The middle term represents scheduled equal-principal amortization. Survival $S_{q-1}$ accounts for defaults and full prepayments in earlier quarters. Survival starts at one and updates after default followed by conditional prepayment $p_q$:
 
 ```math
 S_0=1,\qquad S_q=S_{q-1}(1-d_q)(1-p_q).
 ```
 
-Lifetime net principal loss is:
+In the original deterministic mode, $d_q=\mathrm{PD}_q$. Lifetime expected credit loss sums the quarterly expected losses through contractual maturity:
 
 ```math
-L=\sum_{q=1}^{T} E_q\,d_q\,\mathrm{LGD}_q.
+\mathrm{ECL}=\sum_{q=1}^{T}\mathrm{EL}_q
+=\sum_{q=1}^{T}\mathrm{PD}_q\times\mathrm{EAD}_q\times\mathrm{LGD}_q.
 ```
 
-In the original deterministic mode, $d_q$ is the conditional mean PD and this recursion gives the exact expected loss under that mode's assumptions. In simulation mode, $d_q$ is a path-specific default fraction and the recursion is evaluated separately for each path. Default occurs before prepayment and scheduled principal payment. Recoveries are included in LGD. No discounting is applied to this net-principal-loss method; it is not a discounted-cash-flow implementation.
+In simulation mode, $d_q^{(n)}$ is the aggregate default fraction on simulated path $n$. Each path has its own surviving balance and therefore its own EAD. Compute lifetime loss separately on every path, then average:
+
+```math
+L^{(n)}=\sum_{q=1}^{T}d_q^{(n)}\times\mathrm{EAD}_q^{(n)}\times\mathrm{LGD}_q,
+\qquad \widehat{\mathrm{ECL}}=\frac{1}{N}\sum_{n=1}^{N}L^{(n)}.
+```
+
+This distinction matters when default shocks persist: future default fractions and surviving EAD are dependent, so multiplying their separate averages generally does not recover expected loss. The PD-times-EAD-times-LGD structure is applied within each simulated path before averaging losses.
+
+**EAD is included, but it is not a separately fitted model in this version.** For these funded, closed-end pools, the supplied amortization schedule and default/prepayment exits determine exposure. EAD varies across simulated paths because prior defaults change surviving principal. The task does not model revolving utilization, additional drawdowns, undrawn commitments or credit conversion factors.
+
+Default occurs before that quarter's prepayment and scheduled principal payment, so EAD uses beginning-of-quarter principal. Recoveries are included in LGD. No discounting is applied to this net-principal-loss method; it is not a discounted-cash-flow implementation.
 
 This tests lifetime versus annual horizons, amortization, competing exits, segment differences, net recovery severity, forecast sensitivity and reversion. Short pools mature before reversion; long pools expose incorrect tail assumptions.
 
