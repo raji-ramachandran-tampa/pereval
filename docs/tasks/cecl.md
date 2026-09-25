@@ -23,6 +23,59 @@ Docker is required for Inspect runs, including reference solvers. Pure generator
 - `pools.csv`: 12 pools across three risk segments, with randomized balances and remaining terms of 4, 12, 24 and 40 quarters.
 - `policy.json`: forecast and reversion lengths.
 
+### Portfolio Description
+
+The **portfolio** is the full collection of exposures being evaluated. A **loan pool** is a group of loans represented together by an aggregate principal balance and shared modeling assumptions. A **segment** identifies the PD, LGD and prepayment behavior assigned to its pools.
+
+This benchmark contains one portfolio, divided into three segments, with four pools in each segment:
+
+```text
+Portfolio: all 12 pools
+|-- Segment A: shared segment A rate models
+|   |-- Pool A1: 1-year remaining term
+|   |-- Pool A2: 3-year remaining term
+|   |-- Pool A3: 6-year remaining term
+|   `-- Pool A4: 10-year remaining term
+|-- Segment B: shared segment B rate models
+|   |-- Pool B1: 1-year remaining term
+|   |-- Pool B2: 3-year remaining term
+|   |-- Pool B3: 6-year remaining term
+|   `-- Pool B4: 10-year remaining term
+`-- Segment C: shared segment C rate models
+    |-- Pool C1: 1-year remaining term
+    |-- Pool C2: 3-year remaining term
+    |-- Pool C3: 6-year remaining term
+    `-- Pool C4: 10-year remaining term
+```
+
+| Level | Meaning in this benchmark |
+| --- | --- |
+| Individual loan | An underlying borrower exposure. Individual loan records are not generated. |
+| Pool | Aggregate exposure sharing a segment and a remaining term. Each pool has its own generated balance. |
+| Segment | Four pools sharing the same PD, LGD and prepayment rate models, but with different remaining terms. |
+| Portfolio | All 12 pools across segments A, B and C. |
+
+For example, **Pool A2 with a $5 million balance** represents $5 million of aggregate loan principal in segment A with three years remaining. It does not mean one $5 million loan. It could represent many smaller loans, but the generator does not assign a borrower count or individual loan sizes. The $5 million amount is illustrative; the actual balance is randomized for each generated instance.
+
+Pools in the same segment can have different lifetime loss amounts and loss rates because their balances and remaining terms differ, even though they share the same quarterly rate models. For example, A2 has a longer exposure horizon than A1. Segments A, B and C are synthetic labels, not ordered credit ratings.
+
+Calculate expected lifetime loss separately for each pool, then add the dollar estimates to obtain the portfolio allowance:
+
+```math
+\mathrm{ECL}_{\mathrm{portfolio}}=\sum_{i=1}^{12}\mathrm{ECL}_i.
+```
+
+where:
+
+- $i=1,\ldots,12$ indexes the 12 pools, corresponding to pool IDs A1 through C4; it is not a borrower or quarter index.
+- $\mathrm{ECL}_i$ is pool $i$'s expected lifetime net principal loss, in dollars.
+- $\mathrm{ECL}_{\mathrm{portfolio}}$ is the portfolio's total expected lifetime net principal loss, in dollars.
+- $\sum_{i=1}^{12}$ means add the expected-loss amounts for all pools. Expectations add even when pool losses are dependent.
+
+This aggregation applies to expected dollar losses. Do not add pool loss-rate percentages or prediction-interval endpoints to obtain their portfolio equivalents. In simulation mode, same-segment pools share default shocks; portfolio loss intervals would need to be calculated from joint portfolio loss paths and are not requested by the current task.
+
+The implementation therefore starts at the **pool level**: it models the combined exposure of underlying loans without constructing a loan-by-loan portfolio.
+
 ### Synthetic Portfolio Characteristics
 
 The generator creates aggregate pools of term loans, not individual borrower records. Each pool represents homogeneous exposure sharing its segment's PD, LGD and prepayment rates and its own remaining term. The generated pool fields are `pool_id`, `segment`, `balance` and `remaining_quarters`.
