@@ -27,36 +27,38 @@ The agent estimates three conditional rate models per segment and builds a lifet
 
 For each rate, a linear economic risk score is mapped into a probability by the logistic function:
 
-$$
+```math
 \eta_q = \beta_0 + \beta_u x_{u,q} + \beta_h x_{h,q},
 \qquad m_q = \frac{1}{1+\exp(-\eta_q)}.
-$$
+```
 
 The generator scales the two economic inputs as follows:
 
-$$
+```math
 x_{u,q}=u_q-5,\qquad x_{h,q}=\frac{h_q-0.03}{0.04}.
-$$ Each rate has its own coefficients. For PD, the unemployment coefficient is positive and the house-price coefficient is negative. The probit shock transformation below adds future variation around this logistic mean; it does not replace the mean model.
+```
+
+Each rate has its own coefficients. For PD, the unemployment coefficient is positive and the house-price coefficient is negative. The probit shock transformation below adds future variation around this logistic mean; it does not replace the mean model.
 
 The benchmark prescribes a linear transition of PD, LGD and prepayment from the last forecast quarter to segment historical mean rates. The first subsequent quarter has historical weight `1/R`, reaching full reversion in quarter `R`. `R=0` means immediate reversion. After that the historical rates remain fixed. The oracle's historical target is the mean of the latent conditional rates over the supplied history; the agent estimates it from noisy observations. This policy is part of the exercise, not a claim that CECL mandates this particular method.
 
 For a pool with initial balance $B$, remaining term $T$, and quarter $q=1,\ldots,T$, beginning exposure is:
 
-$$
+```math
 E_q = B\left(1-\frac{q-1}{T}\right)S_{q-1}.
-$$
+```
 
 Survival starts at one and accounts for default followed by conditional prepayment $p_q$:
 
-$$
+```math
 S_0=1,\qquad S_q=S_{q-1}(1-d_q)(1-p_q).
-$$
+```
 
 Lifetime net principal loss is:
 
-$$
+```math
 L=\sum_{q=1}^{T} E_q\,d_q\,\mathrm{LGD}_q.
-$$
+```
 
 In the original deterministic mode, $d_q$ is the conditional mean PD and this recursion gives the exact expected loss under that mode's assumptions. In simulation mode, $d_q$ is a path-specific default fraction and the recursion is evaluated separately for each path. Default occurs before prepayment and scheduled principal payment. Recoveries are included in LGD. No discounting is applied to this net-principal-loss method; it is not a discounted-cash-flow implementation.
 
@@ -68,18 +70,20 @@ Submit `predictions.csv` containing `pool_id,ecl`, in dollars. Each estimate mus
 
 Primary `ecl_regret` is the balance-weighted squared error of pool loss rates:
 
-$$
+```math
 R_{\mathrm{ECL}}=\sum_i \frac{B_i}{\sum_j B_j}
 \left(\frac{\widehat{\mathrm{ECL}}_i-\mathrm{ECL}_i}{B_i}\right)^2.
-$$
+```
 
 The exact conditional-mean oracle scores zero, so this is excess squared loss over the oracle. Lower is better; it is not comparable to CCAR's Winkler regret. Opposite errors in different pools cannot cancel. Also reported: loss-rate MAE in basis points, completion, and, for complete outputs only, portfolio dollars and signed portfolio bias.
 
 Missing, malformed, duplicate, nonfinite or out-of-bounds pool estimates follow the suite convention for each pool:
 
-$$
+```math
 \mathrm{Penalty}_i=\max\left(\mathrm{Score}_{\mathrm{degenerate},i},\;5\,\mathrm{Score}_{\mathrm{oracle},i}\right).
-$$ The oracle squared-error score is exactly zero, so this reduces to the zero-allowance reference score, `true_loss_rate^2`, weighted by pool balance. The MAE diagnostic likewise uses the zero-answer error. Missing answers cannot outperform the zero anchor; a valid but poor answer can score worse than it, as in the other tasks. Completion is reported separately, and portfolio totals are omitted unless every pool has a valid prediction. For a genuinely zero-loss pool, a missing answer has zero error but still zero completion. Extra IDs earn no credit. Infrastructure failures remain unmeasured. Repeated runs reuse the shared worst-case and spread reducer.
+```
+
+The oracle squared-error score is exactly zero, so this reduces to the zero-allowance reference score, `true_loss_rate^2`, weighted by pool balance. The MAE diagnostic likewise uses the zero-answer error. Missing answers cannot outperform the zero anchor; a valid but poor answer can score worse than it, as in the other tasks. Completion is reported separately, and portfolio totals are omitted unless every pool has a valid prediction. For a genuinely zero-loss pool, a missing answer has zero error but still zero completion. Extra IDs earn no credit. Infrastructure failures remain unmeasured. Repeated runs reuse the shared worst-case and spread reducer.
 
 Three references anchor interpretation:
 
@@ -101,24 +105,24 @@ Run `inspect eval pereval/tasks/cecl/task.py -T simulation=true -T baseline=coho
 
 This mode reuses CCAR's bounded probit shock mechanism around the existing CECL logistic mean PD. For quarterly mean probability $m_q$, the aggregate default fraction is:
 
-$$
+```math
 d_q=\Phi\!\left(\frac{\Phi^{-1}(m_q)+\sqrt{\rho}\,z_q}{\sqrt{1-\rho}}\right).
-$$
+```
 
 $\Phi$ is the standard normal cumulative distribution function and $\Phi^{-1}$ its inverse. The parameter $\rho$ controls the size of default-rate fluctuations; $z_q$ is the systemic shock. Positive shocks raise defaults. The stationary shock starts as standard normal and evolves as:
 
-$$
+```math
 z_1\sim\mathcal{N}(0,1),\qquad
 z_{q+1}=\phi z_q+\sqrt{1-\phi^2}\,\epsilon_{q+1},
 \qquad \epsilon_q\overset{\mathrm{iid}}{\sim}\mathcal{N}(0,1).
-$$
+```
 
 Here $\phi$ is the public policy's persistence parameter. Stationary initialization and the innovation scaling preserve the marginal normal distribution, so:
 
-$$
+```math
 \mathbb{E}[d_q\mid\text{supplied macro path}]=m_q,
-\qquad \operatorname{Corr}(z_q,z_{q+k})=\phi^k.
-$$
+\qquad \mathrm{Corr}(z_q,z_{q+k})=\phi^k.
+```
 
 This is a marginal mean across simulated futures, not a mean conditional on an observed previous shock. The correlation formula describes latent shocks, not exactly the nonlinear default fractions. Quarterly PD is conditional on surviving to the quarter, not an annualized rate. Values of zero and one remain exact boundaries. A zero shock gives the median default fraction, which generally differs from its mean.
 
@@ -128,16 +132,16 @@ Apply the existing forecast and reversion rules to the mean rates before drawing
 
 Apply defaults, conditional prepayments and scheduled principal amortization separately along every path, then sum that path's lifetime loss. The allowance is the mean of those lifetime losses, not the lifetime recursion evaluated at marginal mean PDs. With persistent defaults, past shocks affect both surviving balances and current default fractions; the two calculations generally differ. For $N$ simulated paths:
 
-$$
+```math
 \widehat{\mathrm{ECL}}=\frac{1}{N}\sum_{n=1}^{N}L^{(n)},
 \qquad \mathrm{PI}_{95\%}=\left[Q_{0.025}(L),\;Q_{0.975}(L)\right].
-$$
+```
 
 Submit `pool_id,ecl,ecl_lower,ecl_upper` in dollars. The bounds describe the central 95% distribution of future aggregate lifetime loss conditional on the supplied scenario, not a confidence interval for the estimated allowance. Bounds must satisfy:
 
-$$
+```math
 0\le L_{\mathrm{lower}}\le L_{\mathrm{upper}}\le B.
-$$
+```
 
 The mean must also be finite and within principal, but need not lie inside the central interval for a skewed distribution.
 
