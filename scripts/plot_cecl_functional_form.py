@@ -23,7 +23,7 @@ def main():
             "axes.titleweight": "bold",
         }
     )
-    colors = ["#2479A8", "#D36B28", "#248A69"]
+    colors = ["#2479A8", "#D36B28", "#A02C9D"]
     fig, axes = plt.subplots(2, 2, figsize=(13, 9), layout="constrained")
     fig.suptitle(
         "CECL: from economic conditions to lifetime loss", fontsize=19, weight="bold"
