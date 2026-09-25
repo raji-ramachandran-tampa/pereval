@@ -1,6 +1,6 @@
 # CECL Lifetime Expected Credit Losses
 
-This task tests whether an agent can estimate the lifetime allowance for a synthetic portfolio of closed-end, amortizing loans. Unlike CCAR's nine-quarter default-rate projection, the output is expected net principal loss in dollars over each pool's remaining contractual life. It is a modelling benchmark, not a complete accounting compliance assessment. No agent results have been measured for this task yet; it is not part of the README's existing ranking.
+This task tests whether an agent can estimate the lifetime allowance for a synthetic portfolio of amortizing term loans with equal quarterly principal repayments. Unlike CCAR's nine-quarter default-rate projection, the output is expected net principal loss in dollars over each pool's remaining contractual life. It is a modelling benchmark, not a complete accounting compliance assessment. No agent results have been measured for this task yet; it is not part of the README's existing ranking.
 
 The separate [CECL Gemini Pilot, September 2026](https://github.com/raji-ramachandran-tampa/pereval/blob/codex/cecl-gemini-pilot-september-2026/pilots/cecl-gemini-september-2026/REPORT.md) is maintained in the contributor fork. It uses hosted Python and inline inputs, so it is not evidence for the Inspect/Docker isolation protocol and is excluded from this repository's run archive and rankings.
 
@@ -22,6 +22,33 @@ Docker is required for Inspect runs, including reference solvers. Pure generator
 - `forecast.csv`: one macroeconomic path over the forecast period.
 - `pools.csv`: 12 pools across three risk segments, with randomized balances and remaining terms of 4, 12, 24 and 40 quarters.
 - `policy.json`: forecast and reversion lengths.
+
+### Synthetic Portfolio Characteristics
+
+The generator creates aggregate pools of term loans, not individual borrower records. Each pool represents homogeneous exposure sharing its segment's PD, LGD and prepayment rates and its own remaining term. The generated pool fields are `pool_id`, `segment`, `balance` and `remaining_quarters`.
+
+| Characteristic | Current implementation |
+| --- | --- |
+| Loan structure | Funded amortizing term loans with equal quarterly principal repayments over the remaining term. No new drawdowns, renewals or extensions. |
+| Number of pools | 12: four pools in each of segments A, B and C. |
+| Segment meaning | Three synthetic groups with separately randomized rate-model coefficients. A, B and C are labels, not ordered credit ratings or named loan products. |
+| Pool balance | Each pool's current aggregate principal is drawn uniformly in whole dollars from $1 million through $10 million. This is not an individual loan amount. |
+| Remaining maturity | Each segment has one pool at each of 4, 12, 24 and 40 quarters, corresponding to 1, 3, 6 and 10 years. These are remaining, not original, terms. |
+| Repayment convention | Equal principal amortization; not an equal-total-payment mortgage schedule, interest-only structure or balloon repayment. |
+| Default and prepayment | Default is applied first to beginning principal. Surviving loans may then prepay fully; remaining loans make their scheduled principal payment. Exited exposure never returns. |
+| PD | Quarterly default probability driven by segment-specific economic sensitivities. Higher unemployment raises mean PD; stronger house-price growth lowers it. |
+| LGD | Net principal loss fraction after recoveries, modeled at segment level. No separate collateral values, recovery cash-flow timing or borrower-specific recovery records are generated. |
+| EAD | Derived from each pool's current balance, remaining amortization and prior default/prepayment exits; no independent EAD regression or credit conversion factor. |
+| Economic inputs | Synthetic unemployment and year-over-year house-price growth. House-price sensitivity does not establish that the loans are mortgages or property-secured. |
+| Historical observations | By default, 80 quarterly aggregate rate observations per segment. These are synthetic noisy rate measurements, not actual borrower performance records. |
+| Future assumptions | By default, eight forecast quarters followed by four quarters of linear reversion to historical mean rates. |
+| Simulation dependence | Default shocks persist over time; same-segment pools share shocks and different segments have independent shocks. LGD and prepayment are deterministic conditional rates within future simulations. |
+
+There is no generated loan count, loan-size distribution, borrower identifier, credit score, internal rating, income, industry, geography, collateral type, loan-to-value ratio, interest rate, origination date, delinquency status or seasoning profile. All remaining terms within a segment use the same rate laws; no loan-age effect is modeled. The benchmark therefore represents a generic term-loan portfolio rather than a specified retail, mortgage or commercial lending book.
+
+The value 10,000 used when generating noisy historical PD and prepayment observations is a binomial measurement-noise parameter. It is not the number of loans in a pool. Likewise, `oracle_n` counts simulated futures, not borrowers. The future simulator uses a large homogeneous pool approximation and does not add finite-borrower default-count noise.
+
+### Rate Models And Lifetime Accounting
 
 The agent estimates three conditional rate models per segment and builds a lifetime loss calculation. Rates depend on the macro variables through logistic relationships with coefficients redrawn per instance. This is a synthetic mechanism; it does not inherit CCAR's FRED calibration or claim empirical fidelity. Historical rate observations are noisy, while ground truth uses their underlying expectations. Only the four input files enter the sandbox.
 
@@ -139,7 +166,7 @@ where:
 
 This distinction matters when default shocks persist: future default fractions and surviving EAD are dependent, so multiplying their separate averages generally does not recover expected loss. The PD-times-EAD-times-LGD structure is applied within each simulated path before averaging losses.
 
-**EAD is included, but it is not a separately fitted model in this version.** For these funded, closed-end pools, the supplied amortization schedule and default/prepayment exits determine exposure. EAD varies across simulated paths because prior defaults change surviving principal. The task does not model revolving utilization, additional drawdowns, undrawn commitments or credit conversion factors.
+**EAD is included, but it is not a separately fitted model in this version.** For these funded term-loan pools, the supplied amortization schedule and default/prepayment exits determine exposure. EAD varies across simulated paths because prior defaults change surviving principal. The task does not model revolving utilization, additional drawdowns, undrawn commitments or credit conversion factors.
 
 Default occurs before that quarter's prepayment and scheduled principal payment, so EAD uses beginning-of-quarter principal. Recoveries are included in LGD. No discounting is applied to this net-principal-loss method; it is not a discounted-cash-flow implementation.
 
@@ -309,4 +336,4 @@ The hidden work is estimating segment response laws and their coefficients from 
 
 The [interagency policy statement on allowances for credit losses](https://www.federalreserve.gov/frrs/guidance/interagency-policy-statement-on-allowances-for-credit-losses.htm) describes expected losses over contractual terms with expected prepayments and reversion to historical information beyond reasonable and supportable forecasts. Those concepts motivate this task. The supplied path, reversion policy and loan conventions are benchmark assumptions, not prescribed choices for an institution.
 
-The first version covers funded closed-end principal only. It excludes revolving commitments, renewals and extensions, purchased credit-deteriorated assets, collateral-dependent measurement, accrued interest, qualitative overlays, discounted cash flow methods, scenario mixtures, and management's selection and documentation of reasonable and supportable forecasts. It does not validate financial reporting controls or certify an allowance under ASC 326. Parameters vary but the logistic response family is fixed; broader families and real portfolio validation remain future work.
+The first version covers funded term-loan principal only. It excludes revolving commitments, renewals and extensions, purchased credit-deteriorated assets, collateral-dependent measurement, accrued interest, qualitative overlays, discounted cash flow methods, scenario mixtures, and management's selection and documentation of reasonable and supportable forecasts. It does not validate financial reporting controls or certify an allowance under ASC 326. Parameters vary but the logistic response family is fixed; broader families and real portfolio validation remain future work.
